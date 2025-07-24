@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공정 모니터링 시스템</title>
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --font-size: 14px;
+            --background: #ffffff;
+            --foreground: #030213;
+            --card: #ffffff;
+            --card-foreground: #030213;
+            --primary: #030213;
+            --primary-foreground: #ffffff;
+            --secondary: #f3f4f6;
+            --secondary-foreground: #030213;
+            --muted: #ececf0;
+            --muted-foreground: #717182;
+            --border: rgba(0, 0, 0, 0.1);
+            --input-background: #f3f3f5;
+            --destructive: #d4183d;
+            --destructive-foreground: #ffffff;
+            --font-weight-medium: 500;
+            --font-weight-normal: 400;
+            --radius: 0.5rem;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: var(--font-size);
+            line-height: 1.5;
+            color: var(--foreground);
+            background-color: var(--background);
+        }
+
+        /* Utility classes */
+        .hidden { display: none !important; }
+        .flex { display: flex; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .justify-center { justify-content: center; }
+        .gap-1 { gap: 0.25rem; }
+        .gap-2 { gap: 0.5rem; }
+        .gap-4 { gap: 1rem; }
+        .gap-8 { gap: 2rem; }
+        .space-y-1 > * + * { margin-top: 0.25rem; }
+        .space-y-2 > * + * { margin-top: 0.5rem; }
+        .space-y-4 > * + * { margin-top: 1rem; }
+        .space-y-6 > * + * { margin-top: 1.5rem; }
+        .text-center { text-align: center; }
+        .text-sm { font-size: 0.875rem; }
+        .text-xs { font-size: 0.75rem; }
+        .text-lg { font-size: 1.125rem; }
+        .text-xl { font-size: 1.25rem; }
+        .text-2xl { font-size: 1.5rem; }
+        .font-medium { font-weight: var(--font-weight-medium); }
+        .font-normal { font-weight: var(--font-weight-normal); }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        .mb-6 { margin-bottom: 1.5rem; }
+        .mb-8 { margin-bottom: 2rem; }
+        .mt-4 { margin-top: 1rem; }
+        .p-1 { padding: 0.25rem; }
+        .p-2 { padding: 0.5rem; }
+        .p-4 { padding: 1rem; }
+        .p-6 { padding: 1.5rem; }
+        .p-8 { padding: 2rem; }
+        .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+        .px-4 { padding-left: 1rem; padding-right: 1rem; }
+        .px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+        .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+        .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+        .pb-4 { padding-bottom: 1rem; }
+        .w-full { width: 100%; }
+        .max-w-md { max-width: 28rem; }
+        .max-h-40 { max-height: 10rem; }
+        .max-h-60 { max-height: 15rem; }
+        .min-h-screen { min-height: 100vh; }
+        .flex-1 { flex: 1; }
+        .flex-shrink-0 { flex-shrink: 0; }
+        .grid { display: grid; }
+        .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+        .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+        .overflow-y-auto { overflow-y: auto; }
+        .resize-y { resize: vertical; }
+        .rounded-lg { border-radius: var(--radius); }
+        .rounded-xl { border-radius: 0.75rem; }
+        .rounded-md { border-radius: 0.375rem; }
+        .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+        .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+        .border { border: 1px solid var(--border); }
+        .border-b { border-bottom: 1px solid var(--border); }
+        .border-b-2 { border-bottom: 2px solid; }
+        .border-transparent { border-color: transparent; }
+        .bg-gray-50 { background-color: #f9fafb; }
+        .bg-blue-50 { background-color: #eff6ff; }
+        .bg-white { background-color: white; }
+        .bg-card { background-color: var(--card); }
+        .bg-primary { background-color: var(--primary); }
+        .bg-muted { background-color: var(--muted); }
+        .bg-input-background { background-color: var(--input-background); }
+        .text-primary { color: var(--primary); }
+        .text-primary-foreground { color: var(--primary-foreground); }
+        .text-muted-foreground { color: var(--muted-foreground); }
+        .text-foreground { color: var(--foreground); }
+        .transition-colors { transition: color 0.15s, background-color 0.15s, border-color 0.15s; }
+        .transition-all { transition: all 0.15s; }
+        .fixed { position: fixed; }
+        .inset-0 { inset: 0; }
+        .z-50 { z-index: 50; }
+        .mx-4 { margin-left: 1rem; margin-right: 1rem; }
+
+        /* Component styles */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            font-size: 0.875rem;
+            font-weight: var(--font-weight-medium);
+            transition: all 0.15s;
+            cursor: pointer;
+            border: none;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: var(--primary-foreground);
+        }
+
+        .btn-primary:hover {
+            background-color: rgba(3, 2, 19, 0.9);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            color: var(--foreground);
+            border: 1px solid var(--border);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--muted);
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        .input {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            background-color: var(--input-background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.875rem;
+            transition: border-color 0.15s;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .textarea {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            background-color: var(--input-background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.875rem;
+            min-height: 4rem;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .card {
+            background-color: var(--card);
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+        }
+
+        .tabs {
+            width: 100%;
+        }
+
+        .tab-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            background-color: var(--muted);
+            border-radius: var(--radius);
+            padding: 0.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            border-radius: calc(var(--radius) - 2px);
+            transition: all 0.15s;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--foreground);
+        }
+
+        .tab-button.active {
+            background-color: white;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .admin-tab-list {
+            display: flex;
+            gap: 2rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 1.5rem;
+        }
+
+        .admin-tab-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid transparent;
+            background: none;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+            cursor: pointer;
+            color: var(--muted-foreground);
+            transition: all 0.15s;
+        }
+
+        .admin-tab-button.active {
+            border-bottom-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: var(--font-weight-medium);
+        }
+        @media (max-width: 1024px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .admin-tab-button {
+                font-size: 0.9rem;
+            }
+            .card, .modal-content {
+                margin: 1rem;
+            }
+        }
+        @media (max-width: 480px) {
+            .tab-list {
+                grid-template-columns: 1fr;
+            }
+            .btn {
+                width: 100%;
+            }
+            .admin-tab-list {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+
+        .badge-default {
+            background-color: var(--primary);
+            color: var(--primary-foreground);
+        }
+
+        .badge-secondary {
+            background-color: var(--secondary);
+            color: var(--secondary-foreground);
+        }
+
+        .badge-outline {
+            background-color: transparent;
+            color: var(--foreground);
+            border: 1px solid var(--border);
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+
+        .modal-content {
+            background-color: var(--card);
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 28rem;
+            margin: 1rem;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .process-step {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin-bottom: 1rem;
+        }
+
+        .process-number {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            font-weight: var(--font-weight-medium);
+            flex-shrink: 0;
+        }
+
+        .process-number.completed {
+            background-color: #10b981;
+            color: white;
+        }
+
+        .process-number.current {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .process-number.next {
+            background-color: #f59e0b;
+            color: white;
+        }
+
+        .process-number.pending {
+            background-color: var(--muted);
+            color: var(--muted-foreground);
+        }
+
+        .process-info {
+            flex: 1;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            text-align: center;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            padding: 0.5rem 0;
+        }
+
+        .checkbox {
+            margin-top: 0.125rem;
+        }
+
+        .checkbox-info {
+            flex: 1;
+        }
+
+        .work-log-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .photo-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem;
+            background-color: var(--muted);
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+        }
+
+        .photo-remove {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: var(--muted-foreground);
+        }
+
+        .photo-remove:hover {
+            color: var(--foreground);
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .admin-tab-button {
+                font-size: 0.875rem;
+            }
+            
+            .process-step {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Page -->
+    <div id="loginPage" class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div class="card w-full max-w-md p-8">
+            <div class="text-center mb-8">
+                <h1 class="text-2xl font-medium mb-2">공정 모니터링 시스템</h1>
+                <p class="text-sm text-muted-foreground">작업자 실시간 제공하기</p>
+            </div>
+            
+            <div class="tabs">
+                <div class="tab-list">
+                    <button id="workerTabBtn" class="tab-button active">
+                        👤 작업자
+                    </button>
+                    <button id="adminTabBtn" class="tab-button">
+                        👨‍💼 관리자
+                    </button>
+                </div>
+                
+                <div id="workerTab" class="tab-content active space-y-4">
+                    <form id="workerLoginForm" class="space-y-4">
+                        <div class="space-y-2">
+                            <label for="workerName" class="text-sm font-medium">이름</label>
+                            <input type="text" id="workerName" class="input" placeholder="이름을 입력하세요" required>
+                        </div>
+                        <div class="space-y-2">
+                            <label for="employeeNumber" class="text-sm font-medium">사원번호</label>
+                            <input type="text" id="employeeNumber" class="input" placeholder="사원번호를 입력하세요" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-full">
+                            작업자 로그인
+                        </button>
+                    </form>
+                </div>
+                
+                <div id="adminTab" class="tab-content space-y-4">
+                    <form id="adminLoginForm" class="space-y-4">
+                        <div class="space-y-2">
+                            <label for="adminId" class="text-sm font-medium">관리자 ID</label>
+                            <input type="text" id="adminId" class="input" placeholder="관리자 ID를 입력하세요" required>
+                        </div>
+                        <div class="space-y-2">
+                            <label for="adminPassword" class="text-sm font-medium">비밀번호</label>
+                            <input type="password" id="adminPassword" class="input" placeholder="비밀번호를 입력하세요" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-full">
+                            관리자 로그인
+                        </button>
+                    </form>
+                    <div class="text-xs text-muted-foreground text-center">
+                        Demo: ADMIN / 12345678
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="adminDashboard" class="min-h-screen bg-gray-50 hidden">
+        <header class="bg-card border-b px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-xl font-medium">관리자 대시보드</h1>
+                    <p class="text-sm text-muted-foreground" id="adminWelcome">환영합니다</p>
+                </div>
+                <button id="adminLogoutBtn" class="btn btn-outline flex items-center gap-2">
+                    🚪 로그아웃
+                </button>
+            </div>
+        </header>
+        
+        <div class="p-6">
+            <div class="border-b border-border mb-6">
+                <div class="admin-tab-list">
+                    <button id="projectsTabBtn" class="admin-tab-button active">
+                        ⚙️ 프로젝트 관리
+                    </button>
+                    <button id="monitoringTabBtn" class="admin-tab-button">
+                        📊 실시간 모니터링
+                    </button>
+                </div>
+            </div>
+            
+            <div id="projectsContent" class="tab-content active">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-medium">프로젝트 목록</h2>
+                    <button id="createProjectBtn" class="btn btn-primary flex items-center gap-2">
+                        ➕ 새 프로젝트 생성
+                    </button>
+                </div>
+                <div id="projectsList"></div>
+            </div>
+            
+            <div id="monitoringContent" class="tab-content">
+                <h2 class="text-xl font-medium mb-6">실시간 작업 현황</h2>
+                <div id="workLogsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Worker Dashboard -->
+    <div id="workerDashboard" class="min-h-screen bg-gray-50 hidden">
+        <header class="bg-card border-b px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-xl font-medium">작업자 대시보드</h1>
+                    <p class="text-sm text-muted-foreground" id="workerWelcome">환영합니다</p>
+                </div>
+                <button id="workerLogoutBtn" class="btn btn-outline flex items-center gap-2">
+                    🚪 로그아웃
+                </button>
+            </div>
+        </header>
+        
+        <div class="p-6 space-y-6">
+            <div id="projectSelection" class="card">
+                <div class="p-6 border-b">
+                    <h2 class="text-lg font-medium mb-2">프로젝트 선택</h2>
+                    <p class="text-sm text-muted-foreground">작업할 프로젝트 ID를 입력하세요. 관리자가 등록한 프로젝트만 접근 가능합니다.</p>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div class="flex gap-2">
+                        <input type="text" id="projectIdInput" class="input flex-1" placeholder="프로젝트 ID 입력">
+                        <button id="selectProjectBtn" class="btn btn-primary">선택</button>
+                    </div>
+                    <div id="availableProjects"></div>
+                </div>
+            </div>
+            
+            <div id="selectedProjectDashboard" class="space-y-6 hidden">
+                <div class="card">
+                    <div class="p-6 border-b">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h2 class="text-lg font-medium" id="selectedProjectName"></h2>
+                                <p class="text-sm text-muted-foreground" id="selectedProjectId"></p>
+                            </div>
+                            <button id="changeProjectBtn" class="btn btn-outline">프로젝트 변경</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="p-6 border-b">
+                        <h2 class="text-lg font-medium">공정 진행 현황</h2>
+                    </div>
+                    <div class="p-6">
+                        <div id="processSteps"></div>
+                    </div>
+                </div>
+                
+                <div id="currentWorkCard" class="card hidden">
+                    <div class="p-6 border-b">
+                        <h2 class="text-lg font-medium flex items-center gap-2">🕐 현재 작업 중</h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="bg-blue-50 rounded-lg p-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="text-sm font-medium" id="currentProcessName"></h4>
+                                    <p class="text-xs text-muted-foreground" id="currentStartTime"></p>
+                                </div>
+                                <button id="completeWorkBtn" class="btn btn-primary flex items-center gap-2">
+                                    ⏹️ 작업 완료
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="projectCompleteCard" class="card hidden">
+                    <div class="p-8 text-center">
+                        <div class="text-2xl mb-4">✅</div>
+                        <h3 class="text-lg font-medium mb-2">PROCESS FINISHED – READY TO PACK</h3>
+                        <p class="text-sm text-muted-foreground">모든 공정이 완료되었습니다.</p>
+                    </div>
+                </div>
+                
+                <div id="workHistoryCard" class="card hidden">
+                    <div class="p-6 border-b">
+                        <h2 class="text-lg font-medium">내 작업 이력</h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="max-h-60 overflow-y-auto space-y-2" id="workHistory"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Project Modal -->
+    <div id="createProjectModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="mb-6">
+                <h2 class="text-lg font-medium mb-2">새 프로젝트 생성</h2>
+                <p class="text-sm text-muted-foreground">프로젝트 정보를 입력하고 공정 단계를 선택하세요.</p>
+            </div>
+            <form id="createProjectForm" class="space-y-4">
+                <div class="space-y-2">
+                    <label class="text-sm font-medium">프로젝트명</label>
+                    <input type="text" id="newProjectName" class="input" placeholder="프로젝트명을 입력하세요" required>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-sm font-medium">프로젝트 ID</label>
+                    <input type="text" id="newProjectId" class="input" placeholder="고유한 프로젝트 ID를 입력하세요" required>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-sm font-medium">공정 단계 선택</label>
+                    <div class="max-h-40 overflow-y-auto border rounded-lg p-2 space-y-2" id="processCheckboxes"></div>
+                </div>
+                <div class="flex gap-2">
+                    <button type="button" id="cancelCreateBtn" class="btn btn-outline flex-1">취소</button>
+                    <button type="submit" class="btn btn-primary flex-1">프로젝트 생성</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Complete Work Modal -->
+    <div id="completeWorkModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="mb-6">
+                <h2 class="text-lg font-medium mb-2">작업 완료</h2>
+                <p class="text-sm text-muted-foreground">작업을 완료하고 선택적으로 사진과 메모를 추가하세요.</p>
+            </div>
+            <div class="space-y-4">
+                <div class="space-y-2">
+                    <label class="text-sm font-medium">사진 업로드 (선택사항)</label>
+                    <input type="file" multiple accept="image/*" id="photoUpload" class="w-full text-sm">
+                    <div id="photoList" class="space-y-1"></div>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-sm font-medium">작업 메모 (선택사항)</label>
+                    <textarea id="completionNotes" class="textarea" placeholder="작업 관련 메모를 입력하세요..."></textarea>
+                </div>
+                <div class="flex gap-2">
+                    <button type="button" id="cancelCompleteBtn" class="btn btn-outline flex-1">취소</button>
+                    <button type="button" id="confirmCompleteBtn" class="btn btn-primary flex-1">작업 완료</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Main application state and logic
+        class MonitoringSystem {
+            constructor() {
+                this.currentUser = null;
+                this.projects = [];
+                this.workLogs = [];
+                this.selectedProject = null;
+                this.currentWorkLog = null;
+                this.uploadedPhotos = [];
+                this.selectedProcesses = ['p1', 'p2', 'p3'];
+                
+                // Default processes
+                this.defaultProcesses = [
+                    { id: 'p1', name: '자재 준비', order: 1, description: '필요한 자재 및 도구 준비' },
+                    { id: 'p2', name: '전처리', order: 2, description: '작업 전 사전 처리 작업' },
+                    { id: 'p3', name: '메인 공정', order: 3, description: '주요 생산 공정 수행' },
+                    { id: 'p4', name: '품질 검사', order: 4, description: '제품 품질 확인 및 검증' },
+                    { id: 'p5', name: '후처리', order: 5, description: '마무리 처리 작업' },
+                    { id: 'p6', name: '포장', order: 6, description: '최종 포장 및 정리' }
+                ];
+                
+                this.initializeEventListeners();
+                this.loadState();
+            }
+            
+            initializeEventListeners() {
+                // Login tab switching
+                document.getElementById('workerTabBtn').addEventListener('click', () => this.switchLoginTab('worker'));
+                document.getElementById('adminTabBtn').addEventListener('click', () => this.switchLoginTab('admin'));
+                
+                // Login forms
+                document.getElementById('workerLoginForm').addEventListener('submit', (e) => this.handleWorkerLogin(e));
+                document.getElementById('adminLoginForm').addEventListener('submit', (e) => this.handleAdminLogin(e));
+                
+                // Logout buttons
+                document.getElementById('adminLogoutBtn').addEventListener('click', () => this.logout());
+                document.getElementById('workerLogoutBtn').addEventListener('click', () => this.logout());
+                
+                // Project ID input enter key
+                document.getElementById('projectIdInput').addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        this.selectProject();
+                    }
+                });
+                
+                // Select project button
+                document.getElementById('selectProjectBtn').addEventListener('click', () => this.selectProject());
+                
+                // Change project button
+                document.getElementById('changeProjectBtn').addEventListener('click', () => this.changeProject());
+                
+                // Complete work button
+                document.getElementById('completeWorkBtn').addEventListener('click', () => this.openCompleteWorkModal());
+                
+                // Modal buttons
+                document.getElementById('cancelCompleteBtn').addEventListener('click', () => this.closeCompleteWorkModal());
+                document.getElementById('confirmCompleteBtn').addEventListener('click', () => this.completeWork());
+                
+                // Photo upload
+                document.getElementById('photoUpload').addEventListener('change', (e) => this.handlePhotoUpload(e));
+                
+                // Admin tab switching
+                document.getElementById('projectsTabBtn').addEventListener('click', () => this.switchAdminTab('projects'));
+                document.getElementById('monitoringTabBtn').addEventListener('click', () => this.switchAdminTab('monitoring'));
+                
+                // Create project button
+                document.getElementById('createProjectBtn').addEventListener('click', () => this.openCreateProjectModal());
+                document.getElementById('cancelCreateBtn').addEventListener('click', () => this.closeCreateProjectModal());
+                document.getElementById('createProjectForm').addEventListener('submit', (e) => this.createProject(e));
+            }
+            
+            // Utility methods
+            showElement(id) {
+                document.getElementById(id).classList.remove('hidden');
+            }
+            
+            hideElement(id) {
+                document.getElementById(id).classList.add('hidden');
+            }
+            
+            formatDate(date) {
+                return date.toLocaleString('ko-KR');
+            }
+            
+            // Login methods
+            switchLoginTab(tab) {
+                const workerBtn = document.getElementById('workerTabBtn');
+                const adminBtn = document.getElementById('adminTabBtn');
+                const workerTab = document.getElementById('workerTab');
+                const adminTab = document.getElementById('adminTab');
+                
+                if (tab === 'worker') {
+                    workerBtn.classList.add('active');
+                    adminBtn.classList.remove('active');
+                    workerTab.classList.add('active');
+                    adminTab.classList.remove('active');
+                } else {
+                    adminBtn.classList.add('active');
+                    workerBtn.classList.remove('active');
+                    adminTab.classList.add('active');
+                    workerTab.classList.remove('active');
+                }
+            }
+            
+            handleWorkerLogin(event) {
+                event.preventDefault();
+                const name = document.getElementById('workerName').value.trim();
+                const employeeNumber = document.getElementById('employeeNumber').value.trim();
+                
+                if (name && employeeNumber) {
+                    this.currentUser = { type: 'worker', name, employeeNumber };
+                    this.showWorkerDashboard();
+                    this.saveState();
+                }
+            }
+            
+            handleAdminLogin(event) {
+                event.preventDefault();
+                const adminId = document.getElementById('adminId').value.trim();
+                const password = document.getElementById('adminPassword').value.trim();
+                
+                if (adminId === 'ADMIN' && password === '12345678') {
+                    this.currentUser = { type: 'admin', adminId };
+                    this.showAdminDashboard();
+                    this.saveState();
+                } else {
+                    alert('Invalid admin credentials');
+                }
+            }
+            
+            logout() {
+                this.currentUser = null;
+                this.selectedProject = null;
+                this.currentWorkLog = null;
+                this.hideElement('adminDashboard');
+                this.hideElement('workerDashboard');
+                this.showElement('loginPage');
+                
+                // Reset forms
+                document.getElementById('workerName').value = '';
+                document.getElementById('employeeNumber').value = '';
+                document.getElementById('adminId').value = '';
+                document.getElementById('adminPassword').value = '';
+                
+                this.saveState();
+            }
+            
+            // Dashboard methods
+            showAdminDashboard() {
+                this.hideElement('loginPage');
+                this.showElement('adminDashboard');
+                document.getElementById('adminWelcome').textContent = `환영합니다, ${this.currentUser.adminId}님`;
+                this.renderProjects();
+                this.renderWorkLogs();
+                this.initializeProcessCheckboxes();
+            }
+            
+            showWorkerDashboard() {
+                this.hideElement('loginPage');
+                this.showElement('workerDashboard');
+                document.getElementById('workerWelcome').textContent = `${this.currentUser.name}님 (${this.currentUser.employeeNumber})`;
+                this.renderAvailableProjects();
+            }
+            
+            switchAdminTab(tab) {
+                const projectsBtn = document.getElementById('projectsTabBtn');
+                const monitoringBtn = document.getElementById('monitoringTabBtn');
+                const projectsContent = document.getElementById('projectsContent');
+                const monitoringContent = document.getElementById('monitoringContent');
+                
+                if (tab === 'projects') {
+                    projectsBtn.classList.add('active');
+                    monitoringBtn.classList.remove('active');
+                    projectsContent.classList.add('active');
+                    monitoringContent.classList.remove('active');
+                } else {
+                    monitoringBtn.classList.add('active');
+                    projectsBtn.classList.remove('active');
+                    monitoringContent.classList.add('active');
+                    projectsContent.classList.remove('active');
+                    this.renderWorkLogs();
+                }
+            }
+            
+            // Project selection methods
+            selectProject() {
+                const projectId = document.getElementById('projectIdInput').value.trim();
+                this.selectProjectById(projectId);
+            }
+            
+            selectProjectById(projectId) {
+                const project = this.projects.find(p => p.id === projectId);
+                if (project) {
+                    this.selectedProject = project;
+                    document.getElementById('projectIdInput').value = projectId;
+                    this.showSelectedProject();
+                    this.saveState();
+                } else {
+                    alert('유효하지 않은 프로젝트 ID입니다.');
+                }
+            }
+            
+            changeProject() {
+                this.selectedProject = null;
+                this.currentWorkLog = null;
+                this.hideElement('selectedProjectDashboard');
+                this.hideElement('currentWorkCard');
+                this.hideElement('projectCompleteCard');
+                this.hideElement('workHistoryCard');
+                this.showElement('projectSelection');
+                document.getElementById('projectIdInput').value = '';
+                this.saveState();
+            }
+            
+            showSelectedProject() {
+                this.hideElement('projectSelection');
+                this.showElement('selectedProjectDashboard');
+                
+                document.getElementById('selectedProjectName').textContent = this.selectedProject.name;
+                document.getElementById('selectedProjectId').textContent = `프로젝트 ID: ${this.selectedProject.id}`;
+                
+                this.renderProcessSteps();
+                this.renderWorkerHistory();
+            }
+            
+            // Worker methods
+            getWorkerLogs(projectId) {
+                return this.workLogs.filter(log => 
+                    log.projectId === projectId && log.employeeNumber === this.currentUser.employeeNumber
+                );
+            }
+            
+            getNextProcess(project, completedProcesses) {
+                return project.processes.find(process => !completedProcesses.includes(process.id));
+            }
+            
+            startWork(processId) {
+                const newWorkLog = {
+                    id: `${Date.now()}-${this.currentUser.employeeNumber}-${processId}`,
+                    projectId: this.selectedProject.id,
+                    processId,
+                    workerName: this.currentUser.name,
+                    employeeNumber: this.currentUser.employeeNumber,
+                    startTime: new Date(),
+                    status: 'in-progress',
+                    photos: []
+                };
+                
+                this.currentWorkLog = newWorkLog;
+                this.workLogs.push(newWorkLog);
+                
+                this.showCurrentWork();
+                this.renderProcessSteps();
+                this.saveState();
+            }
+            
+            showCurrentWork() {
+                const process = this.selectedProject.processes.find(p => p.id === this.currentWorkLog.processId);
+                document.getElementById('currentProcessName').textContent = process.name;
+                document.getElementById('currentStartTime').textContent = `시작 시간: ${this.formatDate(this.currentWorkLog.startTime)}`;
+                this.showElement('currentWorkCard');
+            }
+            
+            openCompleteWorkModal() {
+                this.showElement('completeWorkModal');
+                this.uploadedPhotos = [];
+                document.getElementById('photoList').innerHTML = '';
+                document.getElementById('completionNotes').value = '';
+            }
+            
+            closeCompleteWorkModal() {
+                this.hideElement('completeWorkModal');
+            }
+            
+            handlePhotoUpload(event) {
+                const files = Array.from(event.target.files);
+                files.forEach(file => {
+                    this.uploadedPhotos.push(file.name);
+                });
+                this.renderPhotoList();
+            }
+            
+            renderPhotoList() {
+                const container = document.getElementById('photoList');
+                container.innerHTML = this.uploadedPhotos.map((photo, index) => `
+                    <div class="photo-item">
+                        <span>${photo}</span>
+                        <button type="button" class="photo-remove" onclick="app.removePhoto(${index})">×</button>
+                    </div>
+                `).join('');
+            }
+            
+            removePhoto(index) {
+                this.uploadedPhotos.splice(index, 1);
+                this.renderPhotoList();
+            }
+            
+            completeWork() {
+                if (!this.currentWorkLog) return;
+                
+                const notes = document.getElementById('completionNotes').value.trim();
+                
+                // Update work log
+                const logIndex = this.workLogs.findIndex(log => log.id === this.currentWorkLog.id);
+                if (logIndex !== -1) {
+                    this.workLogs[logIndex] = {
+                        ...this.workLogs[logIndex],
+                        endTime: new Date(),
+                        status: 'completed',
+                        photos: [...this.uploadedPhotos],
+                        notes: notes || undefined
+                    };
+                }
+                
+                this.currentWorkLog = null;
+                this.closeCompleteWorkModal();
+                this.hideElement('currentWorkCard');
+                this.renderProcessSteps();
+                this.renderWorkerHistory();
+                this.saveState();
+            }
+            
+            // Process rendering
+            renderProcessSteps() {
+                const container = document.getElementById('processSteps');
+                const myLogs = this.getWorkerLogs(this.selectedProject.id);
+                const completedProcessIds = myLogs.filter(log => log.status === 'completed').map(log => log.processId);
+                const nextProcess = this.getNextProcess(this.selectedProject, completedProcessIds);
+                const isProjectComplete = completedProcessIds.length === this.selectedProject.processes.length;
+                
+                container.innerHTML = this.selectedProject.processes.map(process => {
+                    const isCompleted = completedProcessIds.includes(process.id);
+                    const isCurrent = this.currentWorkLog?.processId === process.id;
+                    const isNext = nextProcess?.id === process.id && !this.currentWorkLog;
+                    
+                    let numberClass = 'pending';
+                    let numberContent = process.order;
+                    
+                    if (isCompleted) {
+                        numberClass = 'completed';
+                        numberContent = '✓';
+                    } else if (isCurrent) {
+                        numberClass = 'current';
+                        numberContent = process.order;
+                    } else if (isNext) {
+                        numberClass = 'next';
+                        numberContent = process.order;
+                    }
+                    
+                    return `
+                        <div class="process-step">
+                            <div class="process-number ${numberClass}">${numberContent}</div>
+                            <div class="process-info">
+                                <div class="font-medium">${process.name}</div>
+                                <div class="text-xs text-muted-foreground">${process.description}</div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                ${isCompleted ? '<span class="badge badge-default">✅ 완료</span>' : ''}
+                                ${isCurrent ? '<span class="badge badge-secondary">🕐 진행중</span>' : ''}
+                                ${isNext && !this.currentWorkLog ? `
+                                    <button class="btn btn-primary btn-sm" onclick="app.startWork('${process.id}')">
+                                        ▶️ 시작
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                // Show/hide project complete card
+                if (isProjectComplete) {
+                    this.showElement('projectCompleteCard');
+                } else {
+                    this.hideElement('projectCompleteCard');
+                }
+            }
+            
+            renderWorkerHistory() {
+                const myLogs = this.getWorkerLogs(this.selectedProject.id);
+                
+                if (myLogs.length > 0) {
+                    const container = document.getElementById('workHistory');
+                    container.innerHTML = myLogs.map(log => {
+                        const process = this.selectedProject.processes.find(p => p.id === log.processId);
+                        const duration = log.endTime 
+                            ? this.calculateDuration(log.startTime, log.endTime)
+                            : this.calculateDuration(log.startTime, new Date());
+                        
+                        return `
+                            <div class="work-log-item">
+                                <div>
+                                    <p class="text-sm font-medium">${process?.name}</p>
+                                    <p class="text-xs text-muted-foreground">
+                                        ${this.formatDate(log.startTime)}
+                                        ${log.endTime ? ` → ${this.formatDate(log.endTime)}` : ''}
+                                    </p>
+                                    <p class="text-xs text-muted-foreground">소요시간: ${duration}</p>
+                                    ${log.notes ? `<p class="text-xs text-muted-foreground">메모: ${log.notes}</p>` : ''}
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    ${log.photos.length > 0 ? `
+                                        <span class="badge badge-outline">
+                                            📷 ${log.photos.length}
+                                        </span>
+                                    ` : ''}
+                                    <span class="badge ${log.status === 'completed' ? 'badge-default' : 'badge-secondary'}">
+                                        ${log.status === 'completed' ? '완료' : '진행중'}
+                                    </span>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                    this.showElement('workHistoryCard');
+                } else {
+                    this.hideElement('workHistoryCard');
+                }
+            }
+            
+            calculateDuration(startTime, endTime) {
+                const diffMs = endTime - startTime;
+                const hours = Math.floor(diffMs / (1000 * 60 * 60));
+                const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                
+                if (hours > 0) {
+                    return `${hours}시간 ${minutes}분`;
+                } else {
+                    return `${minutes}분`;
+                }
+            }
+            
+            // Admin methods
+            initializeProcessCheckboxes() {
+                const container = document.getElementById('processCheckboxes');
+                container.innerHTML = '';
+                
+                this.defaultProcesses.forEach(process => {
+                    const div = document.createElement('div');
+                    div.className = 'checkbox-item';
+                    
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.className = 'checkbox';
+                    checkbox.id = `process_${process.id}`;
+                    checkbox.value = process.id;
+                    checkbox.checked = this.selectedProcesses.includes(process.id);
+                    checkbox.addEventListener('change', () => this.toggleProcess(process.id));
+                    
+                    const infoDiv = document.createElement('div');
+                    infoDiv.className = 'checkbox-info';
+                    
+                    const label = document.createElement('label');
+                    label.htmlFor = `process_${process.id}`;
+                    label.className = 'text-sm font-medium';
+                    label.textContent = process.name;
+                    
+                    const description = document.createElement('p');
+                    description.className = 'text-xs text-muted-foreground';
+                    description.textContent = process.description;
+                    
+                    infoDiv.appendChild(label);
+                    infoDiv.appendChild(description);
+                    div.appendChild(checkbox);
+                    div.appendChild(infoDiv);
+                    container.appendChild(div);
+                });
+            }
+            
+            toggleProcess(processId) {
+                if (this.selectedProcesses.includes(processId)) {
+                    this.selectedProcesses = this.selectedProcesses.filter(id => id !== processId);
+                } else {
+                    this.selectedProcesses.push(processId);
+                }
+            }
+            
+            openCreateProjectModal() {
+                this.showElement('createProjectModal');
+                this.initializeProcessCheckboxes();
+            }
+            
+            closeCreateProjectModal() {
+                this.hideElement('createProjectModal');
+                document.getElementById('newProjectName').value = '';
+                document.getElementById('newProjectId').value = '';
+                this.selectedProcesses = ['p1', 'p2', 'p3'];
+            }
+            
+            createProject(event) {
+                event.preventDefault();
+                
+                const name = document.getElementById('newProjectName').value.trim();
+                const id = document.getElementById('newProjectId').value.trim();
+                
+                // Validation
+                if (!name) {
+                    alert('프로젝트명을 입력해주세요.');
+                    return;
+                }
+                
+                if (!id) {
+                    alert('프로젝트 ID를 입력해주세요.');
+                    return;
+                }
+                
+                if (this.selectedProcesses.length === 0) {
+                    alert('최소 하나의 공정을 선택해주세요.');
+                    return;
+                }
+                
+                // Check for duplicate project ID
+                if (this.projects.find(p => p.id === id)) {
+                    alert('이미 존재하는 프로젝트 ID입니다.');
+                    return;
+                }
+                
+                // Create processes array
+                const processes = this.defaultProcesses
+                    .filter(p => this.selectedProcesses.includes(p.id))
+                    .map((p, index) => ({ ...p, order: index + 1 }));
+                
+                const newProject = {
+                    id,
+                    name,
+                    processes,
+                    status: 'active',
+                    createdAt: new Date(),
+                    createdBy: this.currentUser.adminId
+                };
+                
+                fetch('http://localhost:3000/api/admin/projects', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newProject)
+                })
+                .then(res => res.json())
+                .then(project => {
+                    this.projects.push(project);
+                    this.closeCreateProjectModal();
+                    this.renderProjects();
+                    this.renderAvailableProjects();
+                    this.saveState();
+                    alert(`프로젝트 "${name}" (ID: ${id})가 성공적으로 생성되었습니다.`)
+                })
+                .catch(err => {
+                    alert('프로젝트 생성에 실패했습니다.');
+                    console.error(err);
+                });
+            }
+            
+            renderProjects() {
+                const container = document.getElementById('projectsList');
+                
+                if (this.projects.length === 0) {
+                    container.innerHTML = `
+                        <div class="card p-8 text-center">
+                            <p class="text-muted-foreground">등록된 프로젝트가 없습니다.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = this.projects.map(project => {
+                    const stats = this.getProjectStats(project.id);
+                    return `
+                        <div class="card">
+                            <div class="p-6 border-b">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h3 class="text-lg font-medium">${project.name}</h3>
+                                        <p class="text-sm text-muted-foreground">ID: ${project.id}</p>
+                                    </div>
+                                    <span class="badge ${project.status === 'active' ? 'badge-default' : 'badge-secondary'}">
+                                        ${project.status === 'active' ? '진행중' : '완료'}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="p-6">
+                                <div class="stats-grid mb-4">
+                                    <div class="stat-item">
+                                        <div>📄</div>
+                                        <p class="text-xs text-muted-foreground">총 작업</p>
+                                        <p class="text-sm font-medium">${stats.total}</p>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div>✅</div>
+                                        <p class="text-xs text-muted-foreground">완료</p>
+                                        <p class="text-sm font-medium">${stats.completed}</p>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div>🕐</div>
+                                        <p class="text-xs text-muted-foreground">진행중</p>
+                                        <p class="text-sm font-medium">${stats.inProgress}</p>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div>👥</div>
+                                        <p class="text-xs text-muted-foreground">작업자</p>
+                                        <p class="text-sm font-medium">${stats.workers}</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium mb-2">구성된 공정:</p>
+                                    <div class="flex flex-wrap gap-1">
+                                        ${project.processes.map(process => 
+                                            `<span class="badge badge-outline">${process.order}. ${process.name}</span>`
+                                        ).join('')}
+                                    </div>
+                                </div>
+                                <div class="mt-4 pt-4 border-t">
+                                    <div class="flex items-center justify-between text-xs text-muted-foreground">
+                                        <span>생성일: ${this.formatDate(project.createdAt)}</span>
+                                        <span>생성자: ${project.createdBy}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            getProjectStats(projectId) {
+                const projectLogs = this.workLogs.filter(log => log.projectId === projectId);
+                const completedLogs = projectLogs.filter(log => log.status === 'completed');
+                const inProgressLogs = projectLogs.filter(log => log.status === 'in-progress');
+                
+                return {
+                    total: projectLogs.length,
+                    completed: completedLogs.length,
+                    inProgress: inProgressLogs.length,
+                    workers: new Set(projectLogs.map(log => log.employeeNumber)).size
+                };
+            }
+            
+            renderWorkLogs() {
+                const container = document.getElementById('workLogsList');
+                
+                if (this.workLogs.length === 0) {
+                    container.innerHTML = `
+                        <div class="card p-8 text-center">
+                            <p class="text-muted-foreground">진행중인 작업이 없습니다.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = this.workLogs.map(log => {
+                    const project = this.projects.find(p => p.id === log.projectId);
+                    const process = project?.processes.find(p => p.id === log.processId);
+                    
+                    return `
+                        <div class="card">
+                            <div class="p-4">
+                                <div class="flex items-center justify-between">
+                                    <div class="space-y-1">
+                                        <div class="flex items-center gap-2">
+                                            <h3 class="text-sm font-medium">${project?.name || 'Unknown Project'}</h3>
+                                            <span class="badge badge-outline">${process?.name || 'Unknown Process'}</span>
+                                        </div>
+                                        <p class="text-xs text-muted-foreground">
+                                            작업자: ${log.workerName} (${log.employeeNumber})
+                                        </p>
+                                        <p class="text-xs text-muted-foreground">
+                                            시작: ${this.formatDate(log.startTime)}
+                                            ${log.endTime ? ` → 완료: ${this.formatDate(log.endTime)}` : ''}
+                                        </p>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        ${log.photos.length > 0 ? `
+                                            <span class="badge badge-secondary">📷 ${log.photos.length}</span>
+                                        ` : ''}
+                                        <span class="badge ${log.status === 'completed' ? 'badge-default' : 'badge-secondary'}">
+                                            ${log.status === 'completed' ? '완료' : '진행중'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            renderAvailableProjects() {
+                const container = document.getElementById('availableProjects');
+                
+                if (this.projects.length > 0) {
+                    container.innerHTML = `
+                        <div class="space-y-2">
+                            <p class="text-sm text-muted-foreground">사용 가능한 프로젝트:</p>
+                            <div class="flex flex-wrap gap-2">
+                                ${this.projects.filter(p => p.status === 'active').map(project => 
+                                    `<button class="btn btn-outline btn-sm" onclick="app.selectProjectById('${project.id}')">${project.id}</button>`
+                                ).join('')}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = '';
+                }
+            }
+            
+            // State persistence
+            saveState() {
+                const state = {
+                    currentUser: this.currentUser,
+                    projects: this.projects,
+                    workLogs: this.workLogs.map(log => ({
+                        ...log,
+                        startTime: log.startTime.toISOString(),
+                        endTime: log.endTime ? log.endTime.toISOString() : null
+                    })),
+                    selectedProject: this.selectedProject,
+                    currentWorkLog: this.currentWorkLog ? {
+                        ...this.currentWorkLog,
+                        startTime: this.currentWorkLog.startTime.toISOString()
+                    } : null
+                };
+                
+                localStorage.setItem('monitoringSystemState', JSON.stringify(state));
+            }
+            
+            loadState() {
+                const savedState = localStorage.getItem('monitoringSystemState');
+                if (savedState) {
+                    try {
+                        const state = JSON.parse(savedState);
+            
+                        // Load projects from backend instead of localStorage
+                        fetch('http://localhost:3000/api/admin/projects')
+                            .then(res => res.json())
+                            .then(projects => {
+                                this.projects = projects;
+            
+                                this.workLogs = (state.workLogs || []).map(log => ({
+                                    ...log,
+                                    startTime: new Date(log.startTime),
+                                    endTime: log.endTime ? new Date(log.endTime) : null
+                                }));
+            
+                                if (state.currentUser) {
+                                    this.currentUser = state.currentUser;
+                                    setTimeout(() => {
+                                        if (this.currentUser.type === 'admin') {
+                                            this.showAdminDashboard();
+                                        } else {
+                                            this.showWorkerDashboard();
+                                            if (state.selectedProject) {
+                                                this.selectedProject = state.selectedProject;
+                                                this.showSelectedProject();
+                                            }
+                                            if (state.currentWorkLog) {
+                                                this.currentWorkLog = {
+                                                    ...state.currentWorkLog,
+                                                    startTime: new Date(state.currentWorkLog.startTime)
+                                                };
+                                                this.showCurrentWork();
+                                            }
+                                        }
+                                    }, 100);
+                                }
+                            })
+                            .catch(err => {
+                                console.error('Failed to load projects from backend:', err);
+                                this.projects = [];
+                            });
+                    } catch (error) {
+                        console.error('Error loading state:', error);
+                    }
+                }
+            }
+        }
+
+        // Initialize the application
+        const app = new MonitoringSystem();
+
+        // Auto-save state every 30 seconds
+        setInterval(() => {
+            if (app.currentUser) {
+                app.saveState();
+            }
+        }, 30000);
+       
+    </script>
+</body>
+</html>
